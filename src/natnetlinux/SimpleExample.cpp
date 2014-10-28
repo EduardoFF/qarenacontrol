@@ -209,7 +209,7 @@ int main(int argc, char* argv[])
    // This infinite loop simulates a "worker" thread that reads the frame
    // buffer each time through, and exits when ctrl-c is pressed.
    printFrames(frameListener);
-   //timeStats(frameListener);
+   timeStats(frameListener);
    
    // Wait for threads to finish.
    frameListener.stop();
