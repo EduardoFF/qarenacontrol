@@ -3,6 +3,6 @@ package poselcm;
 struct pose_list_t
 {
     int64_t  timestamp;
-    int16_t n;
+    int32_t n;
     pose_t poses[n];
 }
