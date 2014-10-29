@@ -10,6 +10,8 @@ SET( VERSION_MINOR 1 )
 SET( VERSION_PATCH 1 )
 SET( VERSION_STRING "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}" )
 
+
+SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 OPTION( BUILD_EXAMPLES "If on, build executable examples." ON )
 
 # Put executables in bin/
@@ -24,6 +26,9 @@ INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIRS} )
 
 # Try to find Doxygen
 FIND_PROGRAM( DOXYGEN_CMD doxygen )
+include(cmake/pods.cmake)
+include(cmake/lcmtypes.cmake)
+lcmtypes_build(CPP_AGGREGATE_HEADER lcmmsgs.hpp)
 
 # Descend into subdirectories
 ADD_SUBDIRECTORY( include )

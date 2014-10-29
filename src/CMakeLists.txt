@@ -1,2 +1,3 @@
 add_subdirectory(natnetlinux)
-add_subdirectory(trackerinterface)
+add_subdirectory(lcmtest)
+#add_subdirectory(trackerinterface)
