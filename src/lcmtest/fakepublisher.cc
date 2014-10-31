@@ -4,6 +4,7 @@
 
 int main(int argc, char ** argv)
 {
+    //lcm::LCM lcm ("udpm://239.255.76.67:7777?ttl=1");
     lcm::LCM lcm;
     if(!lcm.good())
         return 1;
