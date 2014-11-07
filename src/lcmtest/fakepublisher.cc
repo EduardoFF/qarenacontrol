@@ -31,6 +31,7 @@ int main(int argc, char ** argv)
 
     lcm.publish("EXAMPLE", &mymsg);
     
+    lcm.publish("EXAMPLE", &mymsg);
 
     return 0;
 }
