@@ -30,6 +30,7 @@ int main(int argc, char ** argv)
     mymsg.timestamp = time( NULL );
 
     lcm.publish("EXAMPLE", &mymsg);
+    
 
     return 0;
 }
