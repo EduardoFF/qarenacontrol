@@ -3,3 +3,6 @@ lcmtypes/cpp/*
 lcmtypes/java/*
 lcmtypes/python/*
 
+/build/
+/.project
+/.gitignore
