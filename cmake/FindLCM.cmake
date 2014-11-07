@@ -1,36 +1,41 @@
-INCLUDE(FindPackageHandleStandardArgs)
-INCLUDE(HandleLibraryTypes)
+#INCLUDE(FindPackageHandleStandardArgs)
+#INCLUDE(HandleLibraryTypes)
 
 SET(LCM_IncludeSearchPaths
-  /usr/include/
-  /usr/local/include/
-  /opt/local/include
+  usr/include/
+  usr/local/include/
+  opt/local/include
 )
 
 SET(LCM_LibrarySearchPaths
-  /usr/lib/
-  /usr/local/lib/
-  /opt/local/lib/
+  usr/lib/
+  usr/local/lib/
+  opt/local/lib/
 )
 
-FIND_PATH(LCM_INCLUDE_DIR lcm/lcm.h
-  PATHS ${LCM_IncludeSearchPaths}
-)
-FIND_LIBRARY(LCM_LIBRARY_OPTIMIZED
+#FIND_PATH(LCM_INCLUDE_DIR lcm/lcm.h
+  #PATHS ${LCM_IncludeSearchPaths}
+#)
+FIND_LIBRARY(LCM_LIBRARY
   NAMES lcm
   PATHS ${LCM_LibrarySearchPaths}
 )
 
-# Handle the REQUIRED argument and set the <UPPERCASED_NAME>_FOUND variable
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(LCM "Could NOT find LCM library (LCM)"
-  LCM_LIBRARY_OPTIMIZED
-  LCM_INCLUDE_DIR
-)
+MESSAGE(STATUS "LCM Find Result: ${LCM_LIBRARY}")
 
-# Collect optimized and debug libraries
-HANDLE_LIBRARY_TYPES(LCM)
+IF (LCM_LIBRARY)
+  SET(LCM_LIBRARY_FOUND TRUE)
+ENDIF (LCM_LIBRARY)
 
-MARK_AS_ADVANCED(
-  LCM_INCLUDE_DIR
-  LCM_LIBRARY_OPTIMIZED
-)
+
+IF (LCM_LIBRARY_FOUND)
+  IF (NOT LCM_FIND_QUIETLY)
+    MESSAGE(STATUS "Found LCM Library: ${LCM_LIBRARY}")
+  ENDIF (NOT LCM_FIND_QUIETLY)
+ELSE (LCM_LIBRARY_FOUND)
+  IF (LCM_FIND_REQUIRED)
+    MESSAGE(FATAL_ERROR "Could not find LCM")
+  ENDIF (LCM_FIND_REQUIRED)
+ENDIF (LCM_LIBRARY_FOUND)
+
+
