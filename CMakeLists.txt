@@ -24,6 +24,8 @@ INCLUDE_DIRECTORIES( "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 FIND_PACKAGE( Boost COMPONENTS program_options system thread REQUIRED)
 INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIRS} )
 
+FIND_PACKAGE(LCM REQUIRED)
+
 # Try to find Doxygen
 FIND_PROGRAM( DOXYGEN_CMD doxygen )
 include(cmake/pods.cmake)

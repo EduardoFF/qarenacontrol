@@ -466,21 +466,24 @@ function(lcmtypes_install_types)
 endfunction()
 
 macro(lcmtypes_build)
-    find_package(PkgConfig REQUIRED)
-    pkg_check_modules(LCM REQUIRED lcm)
-    
+    #find_package(PkgConfig REQUIRED)
+    #pkg_check_modules(LCM REQUIRED lcm)
     #find lcm-gen (it may be in the install path)
     find_program(LCM_GEN_EXECUTABLE lcm-gen ${EXECUTABLE_OUTPUT_PATH} ${EXECUTABLE_INSTALL_PATH})
+
+    #find_program(LCM_GEN_EXECUTABLE NAMES lcm-gen)
     if (NOT LCM_GEN_EXECUTABLE)
-    	message(FATAL_ERROR "lcm-gen not found!\n")
-    	return()
+      message("Using lcm-gen in default path")
+      set(LCM_GEN_EXECUTABLE lcm-gen)
+            #message(FATAL_ERROR "lcm-gen not found!\n")
+            #return()
     endif()
     
-    lcmtypes_build_c(${ARGV})
+    #lcmtypes_build_c(${ARGV})
     lcmtypes_build_cpp(${ARGV})
 
-    lcmtypes_build_java(${ARGV})
-    lcmtypes_build_python(${ARGV})
+    #lcmtypes_build_java(${ARGV})
+    #lcmtypes_build_python(${ARGV})
     lcmtypes_install_types()
 endmacro()
 

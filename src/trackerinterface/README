@@ -1,0 +1,2 @@
+-add route for multicast 
+e.g.,  /sbin/route add -net 239.0.0.0 netmask 255.0.0.0 dev wlan0

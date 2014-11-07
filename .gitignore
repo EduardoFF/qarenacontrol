@@ -1,3 +1,4 @@
+*.swp
 lcmtypes/c/*
 lcmtypes/cpp/*
 lcmtypes/java/*
