@@ -1,5 +1,6 @@
+#include <stdlib.h>
+#include <time.h>
 #include <lcm/lcm-cpp.hpp>
-
 #include "lcmtypes/lcmmsgs.hpp"
 
 int main(int argc, char ** argv)
