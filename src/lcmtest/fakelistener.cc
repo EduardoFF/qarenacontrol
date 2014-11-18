@@ -15,20 +15,21 @@ class Handler
             int i;
             printf("Received message on channel \"%s\":\n", chan.c_str());
             printf("  timestamp   = %lld\n", (long long)msg->timestamp);
-            printf("  poses:");
+            printf("  poses:\n");
             for(i = 0; i < msg->n; i++)
-	    {
-	      const poselcm::pose_t &pose = msg->poses[i];
-	      printf("  robotid = %d\n", pose.robotid);
-	      printf("  position    = (%d, %d, %d)\n",
-		     pose.position[0], pose.position[1], pose.position[2]);
-	      printf("  orientation = (%d, %d, %d, %d)\n",
-		     pose.orientation[0], pose.orientation[1], 
-		     pose.orientation[2], pose.orientation[3]);
+				{
+				  const poselcm::pose_t &pose = msg->poses[i];
+				  printf("  robotid = %d\n", pose.robotid);
+				  printf("  position    = (%d, %d, %d)\n",
+					 pose.position[0], pose.position[1], pose.position[2]);
+				  printf("  orientation = (%d, %d, %d, %d)\n",
+					 pose.orientation[0], pose.orientation[1],
+					 pose.orientation[2], pose.orientation[3]);
+				  printf(" velocity = %d\n", pose.velocity);
 
-	    }
-            printf("\n");
-        }
+				}
+					printf("\n");
+				}
 };
 
 int main(int argc, char** argv)

@@ -3,33 +3,43 @@
 #include <lcm/lcm-cpp.hpp>
 #include "lcmtypes/lcmmsgs.hpp"
 
-int main(int argc, char ** argv)
-{
-    lcm::LCM lcm("udpm://239.255.76.67:7667?ttl=1");
-    if(!lcm.good())
-        return 1;
+int main(int argc, char ** argv) {
 
-    poselcm::pose_list_t mymsg;
-    mymsg.n = 5;
-    mymsg.poses.resize(mymsg.n);
-    for( int i=0; i < mymsg.n; i++)
-    {
-      poselcm::pose_t my_data;
-      my_data.robotid = i;
-      my_data.position[0] = 1;
-      my_data.position[1] = 2;
-      my_data.position[2] = 3;
+	if (argc < 4) {
+		printf("\nUse : ./fakelistener <robot id> <X> <Y> <LCM channel>\n\n");
+	} else {
 
-      my_data.orientation[0] = 1;
-      my_data.orientation[1] = 0;
-      my_data.orientation[2] = 0;
-      my_data.orientation[3] = 0;
-      mymsg.poses[i] = my_data;
-    }
-    printf("Filled message with 5 poses\n");
-    mymsg.timestamp = time( NULL );
+		lcm::LCM lcm("udpm://239.255.76.67:7667?ttl=1");
 
-    lcm.publish("EXAMPLE", &mymsg);
+		if (!lcm.good()) {
+			printf("Error initializing LCM engine ...");
+			return 1;
+		}
 
-    return 0;
+		poselcm::pose_list_t mymsg;
+		mymsg.n = 1;
+		mymsg.poses.resize(mymsg.n);
+
+		poselcm::pose_t my_data;
+		my_data.robotid = atoi(argv[1]);
+
+		my_data.position[0] = atoi(argv[2]);
+		my_data.position[1] = atoi(argv[3]);
+		my_data.position[2] = 0;
+
+		my_data.orientation[0] = 1;
+		my_data.orientation[1] = 0;
+		my_data.orientation[2] = 0;
+		my_data.orientation[3] = 0;
+
+		my_data.velocity = 10;
+
+		mymsg.poses[0] = my_data;
+
+		mymsg.timestamp = time(NULL);
+
+		lcm.publish(argv[4], &mymsg);
+
+		return 0;
+	}
 }
