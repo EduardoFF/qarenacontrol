@@ -5,5 +5,5 @@ struct pose_t
     byte     robotid;
     int16_t position[3];
     int16_t orientation[4]; 
-    byte    velocity;
+    double    velocity;
 }

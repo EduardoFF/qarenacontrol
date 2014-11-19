@@ -18,7 +18,7 @@ public:
 			printf("  robotid = %d\n", pose.robotid);
 			printf("  position    = (%d, %d, %d)\n", pose.position[0], pose.position[1], pose.position[2]);
 			printf("  orientation = (%d, %d, %d, %d)\n", pose.orientation[0], pose.orientation[1], pose.orientation[2], pose.orientation[3]);
-			printf(" velocity = %d\n", pose.velocity);
+			printf(" velocity = %f\n", pose.velocity);
 
 		}
 		printf("\n");
