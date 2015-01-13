@@ -21,10 +21,11 @@ int64_t __poselcm_pose_t_hash_recursive(const __lcm_hash_ptr *p)
     cp.v = (void*)__poselcm_pose_t_get_hash;
     (void) cp;
 
-    int64_t hash = (int64_t)0x3f2e6bf243d54d91LL
+    int64_t hash = (int64_t)0x5f13cea77cd16a29LL
          + __byte_hash_recursive(&cp)
          + __int16_t_hash_recursive(&cp)
          + __int16_t_hash_recursive(&cp)
+         + __double_hash_recursive(&cp)
         ;
 
     return (hash<<1) + ((hash>>63)&1);
@@ -53,6 +54,9 @@ int __poselcm_pose_t_encode_array(void *buf, int offset, int maxlen, const posel
         if (thislen < 0) return thislen; else pos += thislen;
 
         thislen = __int16_t_encode_array(buf, offset + pos, maxlen - pos, p[element].orientation, 4);
+        if (thislen < 0) return thislen; else pos += thislen;
+
+        thislen = __double_encode_array(buf, offset + pos, maxlen - pos, &(p[element].velocity), 1);
         if (thislen < 0) return thislen; else pos += thislen;
 
     }
@@ -84,6 +88,8 @@ int __poselcm_pose_t_encoded_array_size(const poselcm_pose_t *p, int elements)
 
         size += __int16_t_encoded_array_size(p[element].orientation, 4);
 
+        size += __double_encoded_array_size(&(p[element].velocity), 1);
+
     }
     return size;
 }
@@ -108,6 +114,9 @@ int __poselcm_pose_t_decode_array(const void *buf, int offset, int maxlen, posel
         thislen = __int16_t_decode_array(buf, offset + pos, maxlen - pos, p[element].orientation, 4);
         if (thislen < 0) return thislen; else pos += thislen;
 
+        thislen = __double_decode_array(buf, offset + pos, maxlen - pos, &(p[element].velocity), 1);
+        if (thislen < 0) return thislen; else pos += thislen;
+
     }
     return pos;
 }
@@ -122,6 +131,8 @@ int __poselcm_pose_t_decode_array_cleanup(poselcm_pose_t *p, int elements)
         __int16_t_decode_array_cleanup(p[element].position, 3);
 
         __int16_t_decode_array_cleanup(p[element].orientation, 4);
+
+        __double_decode_array_cleanup(&(p[element].velocity), 1);
 
     }
     return 0;
@@ -158,6 +169,8 @@ int __poselcm_pose_t_clone_array(const poselcm_pose_t *p, poselcm_pose_t *q, int
         __int16_t_clone_array(p[element].position, q[element].position, 3);
 
         __int16_t_clone_array(p[element].orientation, q[element].orientation, 4);
+
+        __double_clone_array(&(p[element].velocity), &(q[element].velocity), 1);
 
     }
     return 0;

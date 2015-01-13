@@ -21,6 +21,7 @@ struct _poselcm_pose_t
     uint8_t    robotid;
     int16_t    position[3];
     int16_t    orientation[4];
+    double     velocity;
 };
 
 /**

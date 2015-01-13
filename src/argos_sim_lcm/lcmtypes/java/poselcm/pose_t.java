@@ -14,6 +14,7 @@ public final class pose_t implements lcm.lcm.LCMEncodable
     public byte robotid;
     public short position[];
     public short orientation[];
+    public double velocity;
  
     public pose_t()
     {
@@ -22,7 +23,7 @@ public final class pose_t implements lcm.lcm.LCMEncodable
     }
  
     public static final long LCM_FINGERPRINT;
-    public static final long LCM_FINGERPRINT_BASE = 0x3f2e6bf243d54d91L;
+    public static final long LCM_FINGERPRINT_BASE = 0x5f13cea77cd16a29L;
  
     static {
         LCM_FINGERPRINT = _hashRecursive(new ArrayList<Class<?>>());
@@ -57,6 +58,8 @@ public final class pose_t implements lcm.lcm.LCMEncodable
         for (int a = 0; a < 4; a++) {
             outs.writeShort(this.orientation[a]); 
         }
+ 
+        outs.writeDouble(this.velocity); 
  
     }
  
@@ -94,6 +97,8 @@ public final class pose_t implements lcm.lcm.LCMEncodable
             this.orientation[a] = ins.readShort();
         }
  
+        this.velocity = ins.readDouble();
+ 
     }
  
     public poselcm.pose_t copy()
@@ -105,6 +110,8 @@ public final class pose_t implements lcm.lcm.LCMEncodable
         System.arraycopy(this.position, 0, outobj.position, 0, 3); 
         outobj.orientation = new short[(int) 4];
         System.arraycopy(this.orientation, 0, outobj.orientation, 0, 4); 
+        outobj.velocity = this.velocity;
+ 
         return outobj;
     }
  

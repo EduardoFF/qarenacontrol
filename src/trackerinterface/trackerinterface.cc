@@ -205,7 +205,7 @@ flushBucket()
     poselcm::pose_t my_data;
     my_data.robotid = it->first;;
     my_data.position[0] = -1*CEIL(1000*pose.x);
-    my_data.position[1] = CEIL(1000*pose.z);
+    my_dats`.position[1] = CEIL(1000*pose.z);
     /// note the y <-> z
     my_data.position[2] = CEIL(1000*pose.y);
 

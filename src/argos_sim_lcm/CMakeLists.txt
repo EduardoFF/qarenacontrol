@@ -8,10 +8,6 @@ find_package(ARGoS REQUIRED)
 # Look for the (optional) galib library
 find_package(MATLABLIB)
 MESSAGE( STATUS "MATLAB LIBRARIES -> " ${MATLABLIB_LIBRARY} )
-
-#find_package(BOOST)
-#MESSAGE( STATUS "BOOST LIBRARIES -> " ${BOOST_LIBRARY} )
-
 #if(GALIB_FOUND)
 #  include_directories(${GALIB_INCLUDE_DIRS})
 #endif(GALIB_FOUND)
@@ -35,6 +31,31 @@ include_directories(/usr/local/MATLAB/R2010b/extern/include/)
 include(cmake/pods.cmake)
 include(cmake/lcmtypes.cmake)
 lcmtypes_build(CPP_AGGREGATE_HEADER lcmmsgs.hpp)
+
+# Navigation libraries
+set(orca_IMPLEMENTATIONS
+  includes/navigation/RVO/Agent.cpp
+  includes/navigation/RVO/Obstacle.cpp
+  includes/navigation/RVO/RVOSimulator.cpp
+  includes/navigation/RVO/KdTree.cpp
+  )
+
+set(hrvo_IMPLEMENTATIONS
+  includes/navigation/HRVO/Agent.cpp
+  includes/navigation/HRVO/Goal.cpp
+  includes/navigation/HRVO/HRVOSimulator.cpp
+  includes/navigation/HRVO/KdTree.cpp
+  includes/navigation/HRVO/Obstacle.cpp
+  includes/navigation/HRVO/RoadmapVertex.cpp
+  includes/navigation/HRVO/Vector2.cpp
+  )
+  
+set(agentvo_IMPLEMENTATIONS
+  includes/navigation/Agent.cpp
+  includes/navigation/HLAgent.cpp
+  includes/navigation/HRVOAgent.cpp
+  includes/navigation/ORCAAgent.cpp
+  )
 
 # Include the simulation compile flags
 include(${CMAKE_SOURCE_DIR}/cmake/SimulationConfig.cmake)
