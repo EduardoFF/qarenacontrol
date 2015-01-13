@@ -15,7 +15,7 @@ class Handler
             int i;
             printf("Received message on channel \"%s\":\n", chan.c_str());
             printf("  timestamp   = %lld\n", (long long)msg->timestamp);
-            printf("  poses:");
+            printf("  poses: [%d]",msg->n);
             for(i = 0; i < msg->n; i++)
 	    {
 	      const poselcm::pose_t &pose = msg->poses[i];
@@ -25,6 +25,8 @@ class Handler
 	      printf("  orientation = (%d, %d, %d, %d)\n",
 		     pose.orientation[0], pose.orientation[1], 
 		     pose.orientation[2], pose.orientation[3]);
+	      printf(" velocity = %d (mm/s)\n",
+		     pose.velocity);
 
 	    }
             printf("\n");
@@ -40,7 +42,7 @@ int main(int argc, char** argv)
         return 1;
 
     Handler handlerObject;
-    lcm.subscribe("EXAMPLE", &Handler::handleMessage, &handlerObject);
+    lcm.subscribe("TARGET", &Handler::handleMessage, &handlerObject);
 
     while(0 == lcm.handle());
 

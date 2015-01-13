@@ -2,3 +2,5 @@
 add_subdirectory(lcmtest)
 add_subdirectory(trackerinterface)
 add_subdirectory(qarenaview)
+add_subdirectory(mavlink_test)
+add_subdirectory(mavlink_footbot)

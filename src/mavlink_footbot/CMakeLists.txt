@@ -1,0 +1,8 @@
+include_directories(${CMAKE_SOURCE_DIR}/include/mavlink/common)
+include_directories(${CMAKE_SOURCE_DIR}/include/mavlink)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+find_package(Pthreads REQUIRED)
+add_library( mavlink_footbot mavlink_footbot.cc)
+target_link_libraries(mavlink_footbot ${PTHREADS_LIBRARIES})
+add_executable( mavlink_footbot_test mavlink_footbot_test.cc)
+target_link_libraries(mavlink_footbot_test mavlink_footbot)

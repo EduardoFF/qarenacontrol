@@ -1,0 +1,1 @@
+add_library(footbot_diffusion MODULE footbot_diffusion.cpp)

@@ -1,0 +1,7 @@
+To Generate MAVLINK
+1) Install mavlink anywhere you want by cloning the repository
+	e.g., mkdir -p ~/tmp/mavlink; cd ~/tmp/mavlink/; git clone https://github.com/mavlink/mavlink.git
+2) update PYTHONPATH:
+	export PYTHONPATH=~/tmp/mavlink/mavlink
+3) generate using minimal.xml located in this folder
+	mkdir -p ../include/mavlink; python -m pymavlink.generator.mavgen -o ../include/mavlink/ --lang C minimal.xml

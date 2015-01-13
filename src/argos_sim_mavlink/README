@@ -1,0 +1,3 @@
+Controller to test mavlink in argos simulator
+
+In order to make out-of-source build, copy the xml folder inside the build directory

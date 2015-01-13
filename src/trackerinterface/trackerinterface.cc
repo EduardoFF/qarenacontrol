@@ -36,11 +36,7 @@
 #define PI 3.14159265
 #define RADIANS(X) ((X)*PI/180)
 #define DEGREES(X) ((X)*180.0)/PI
-//#ifndef NDEBUG
 #define DEBUGMSG(m, ...) fprintf(stderr, m ,## __VA_ARGS__ )
-//#else
-//#define DEBUGMSG(m, ...) 
-//#endif
 
 
 
@@ -50,7 +46,7 @@ bool g_run = false;
 
 struct timeval g_totaTimeStart;
 
-uint32_t g_windowSize = 1000;
+uint32_t g_windowSize = 100;
 /// end of the current time window in milliseconds since the start of the process
 uint32_t g_nextFlush = g_windowSize;
 
@@ -63,15 +59,19 @@ std::map< int, std::vector< RobotPose > > g_poseBucket;
 
 lcm::LCM *g_lcm;
 
+std::map< int, RobotPose > g_lastPoseSent;
+std::map< int, uint32_t > g_lastTimeSent;
 
 uint32_t timeElapsed() ;
+
+
 
 /// End the program gracefully.
 void 
 terminate(int)
 {
-   /// Tell the main() thread to close.
-   g_run = false;
+  /// Tell the main() thread to close.
+  g_run = false;
 }
 
 /// Set the global addresses from the command line.
@@ -80,35 +80,50 @@ readOpts( int argc, char* argv[] )
 {
    namespace po = boost::program_options;
    
-   po::options_description desc("simple-example: demonstrates using NatNetLinux\nOptions");
+   po::options_description desc("trackerinterface: Forwards NatNet to LCM\nOptions");
    desc.add_options()
       ("help", "Display help message")
-      ("local-addr,l", po::value<std::string>(), "Local IPv4 address")
-      ("server-addr,s", po::value<std::string>(), "Server IPv4 address")
+      ("local-addr,l", po::value<std::string>()->required(), "Local IPv4 address")
+      ("server-addr,s", po::value<std::string>()->required(), "Server IPv4 address")
+      ("rate,r", po::value<int>()->default_value(100), "Retransmission rate in ms interval (default: 100ms = 10 Hz)")
    ;
    
-   po::variables_map vm;
-   po::store(po::parse_command_line(argc,argv,desc), vm);
-   
-   if(
-      argc < 5 || vm.count("help") ||
-      !vm.count("local-addr") ||
-      !vm.count("server-addr")
-   )
-   {
-      std::cout << desc << std::endl;
-      exit(1);
+   try{
+     po::variables_map vm;
+     po::store(po::parse_command_line(argc,argv,desc), vm);
+
+     if(
+       argc < 5 || vm.count("help") ||
+       !vm.count("local-addr") ||
+       !vm.count("server-addr")
+       )
+     {
+       std::cout << desc << std::endl;
+       exit(1);
+     }
+
+     g_windowSize =  vm["rate"].as<int>();
+     std::cout << "ws " << g_windowSize << std::endl;
+     g_localAddress = inet_addr( vm["local-addr"].as<std::string>().c_str() );
+     g_serverAddress = inet_addr( vm["server-addr"].as<std::string>().c_str() );
    }
-   
-   g_localAddress = inet_addr( vm["local-addr"].as<std::string>().c_str() );
-   g_serverAddress = inet_addr( vm["server-addr"].as<std::string>().c_str() );
+   catch(boost::program_options::required_option& e) 
+    { 
+      std::cerr << "ERROR: " << e.what() << std::endl << std::endl; \
+	std::cerr << desc << std::endl;
+      exit(1);
+    } 
+    catch(boost::program_options::error& e) 
+    { 
+      std::cerr << "ERROR: " << e.what() << std::endl << std::endl; 
+      std::cerr << desc << std::endl;
+      exit(1); 
+    } 
 }
 
 void 
 processFrame(MocapFrame &frame)
 {
-  //printf("processing frame\n");
-  //DEBUGMSG("processFrame\n");
   std::vector<RigidBody> const& rBodies = frame.rigidBodies();
   FOREACH(it, rBodies)
   {
@@ -172,6 +187,7 @@ flushBucket()
   mymsg.n = g_poseBucket.size();
   mymsg.poses.resize(mymsg.n);
 
+  mymsg.timestamp = time( NULL );
   int ix=0;
   FOREACH(it, g_poseBucket)
   {
@@ -180,28 +196,62 @@ flushBucket()
     std::vector< RobotPose > &poses = it->second;
     /// do aggregation, filtering, smoothing, etc
 
+    /// IMPORTANT NOTE: The tracker sets y-axis as vertical one, here we switch them
+    /// therefore, the z-axis becomes the vertical
+    /// and, we multiply the x-axis by -1 because the stupid optitrack sets the wrong 
+    /// ground plan
+    /// position is described as int (mm.)
     RobotPose &pose = poses.back();
     poselcm::pose_t my_data;
     my_data.robotid = it->first;;
-    my_data.position[0] = CEIL(1000*pose.x);
-    my_data.position[1] = CEIL(1000*pose.y);
-    my_data.position[2] = CEIL(1000*pose.z);
+    my_data.position[0] = -1*CEIL(1000*pose.x);
+    my_data.position[1] = CEIL(1000*pose.z);
+    /// note the y <-> z
+    my_data.position[2] = CEIL(1000*pose.y);
 
+    /// IMPORTANT NOTE: we decided to send the quaternion as (w,x,y,z)
+    /// because argos uses that convention
+    /// quaternion is described in integer (multiplied by 1e4)
+    /// note also that we shift y<->z
     printf("ori %f %f %f %f\n",
 	   pose.qx, pose.qy, pose.qz, pose.qw);
     my_data.orientation[1] = CEIL(10000.0*pose.qx);
-    my_data.orientation[2] = CEIL(10000.0*pose.qy);
-    my_data.orientation[3] = CEIL(10000.0*pose.qz);
+    my_data.orientation[3] = CEIL(10000.0*pose.qy);
+    my_data.orientation[2] = CEIL(10000.0*pose.qz);
     my_data.orientation[0] = CEIL(10000.0*pose.qw);
 
+
+    my_data.velocity = 0;
+    IT(g_lastPoseSent) jt = g_lastPoseSent.find( it->first );
+    if( jt != g_lastPoseSent.end())
+    {
+      IT(g_lastTimeSent) kt = g_lastTimeSent.find( it->first);
+      if( kt == g_lastTimeSent.end())
+      {
+	fprintf(stderr, "WTF? This should not happen - can't find last sent time - velocity not set\n");
+      }
+      else
+      {
+	RobotPose &lastpose = jt->second;
+	uint32_t prevtime = kt->second; /// in seconds
+	double dx = 1000.0*(lastpose.x - pose.x);
+	double dy = 1000.0*(lastpose.y - pose.y);
+	double dz = 1000.0*(lastpose.z - pose.z);
+	double dd = sqrt(dx*dx + dy*dy + dz*dz);
+	/// note that the norm is in mm
+	double velmmxsec = (dd)/(mymsg.timestamp - prevtime); // in mm/s
+	my_data.velocity = CEIL(velmmxsec);
+      }
+    }
+
     double yaw, pitch, roll;
-    testQuaternion(pose.qx, pose.qy, pose.qz, pose.qw,
+    testQuaternion(my_data.orientation[1]/10000.,
+		   my_data.orientation[2]/10000.,
+		   my_data.orientation[3]/10000.,
+		   my_data.orientation[0]/10000.,
 		   yaw, pitch, roll);
-    //double yaw = atan( 2*(pose.qx*pose.qy + pose.qz*pose.qw) / (pose.qx*pose.qx - pose.qy*pose.qy - pose.qz*pose.qz + pose.qw*pose.qw));
 
-    //double yaw2 = atan2( 2*(pose.qx*pose.qy + pose.qz*pose.qw), (pose.qx*pose.qx - pose.qy*pose.qy - pose.qz*pose.qz + pose.qw*pose.qw));
-
-    DEBUGMSG("Sending ROBOT %d (%d, %d %d) - (%d %d %d %d)\n",
+    DEBUGMSG("Sending ROBOT %d (%d, %d %d) - (%d %d %d %d) [YAW: %f PITCH %f ROLL %f]\n",
 	     my_data.robotid,
 	     my_data.position[0],
 	     my_data.position[1],
@@ -209,13 +259,15 @@ flushBucket()
 	     my_data.orientation[0],
 	     my_data.orientation[1],
 	     my_data.orientation[2],
-	     my_data.orientation[3]);
-    printf("Yaw Robot %d = (%.2f %.2f %.2f) \n", my_data.robotid, 
-	   DEGREES(yaw), yaw, DEGREES(pitch));
+	     my_data.orientation[3],
+	     DEGREES(yaw),
+	     DEGREES(pitch),
+	     DEGREES(roll));
     mymsg.poses[ix++] = my_data;
+    g_lastTimeSent[it->first] = mymsg.timestamp;
+    g_lastPoseSent[it->first] = pose;
   }
-  mymsg.timestamp = time( NULL );
-  g_lcm->publish("EXAMPLE", &mymsg);
+  g_lcm->publish("TRACK", &mymsg);
   DEBUGMSG("Flush bucket\n");
   g_poseBucket.clear();
 
@@ -233,16 +285,13 @@ processFrames(FrameListener& frameListener)
    {
       while( true )
       {
-	//printf("trying to get frame\n");
          /// Try to get a new frame from the listener.
          MocapFrame frame(frameListener.pop(&valid).first);
          /// Quit if the listener has no more frames.
          if( !valid )
 	 {
-	   //printf("Not valid!\n");
 	   break;
 	 }
-	 //printf("valid\n");
 	 processFrame(frame);
       }
       
@@ -262,14 +311,11 @@ uint32_t timeElapsed()
 {
   struct timeval current_time;
   gettimeofday(&current_time, NULL);
-  //printf("current_time tv_sec %d tv_usec %d\n",
-	 //current_time.tv_sec, current_time.tv_usec);
   
 
   uint32_t total_time_ms = 
     (current_time.tv_sec - g_totaTimeStart.tv_sec)*1000 
     + (int)( (current_time.tv_usec - g_totaTimeStart.tv_usec) / 1000.0);
-  //printf("elapsed ms %d", total_time_ms);
   
   return total_time_ms;
 }
