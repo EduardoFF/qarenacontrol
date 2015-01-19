@@ -86,6 +86,7 @@ readOpts( int argc, char* argv[] )
       ("local-addr,l", po::value<std::string>()->required(), "Local IPv4 address")
       ("server-addr,s", po::value<std::string>()->required(), "Server IPv4 address")
       ("rate,r", po::value<int>()->default_value(100), "Retransmission rate in ms interval (default: 100ms = 10 Hz)")
+      ("channel,c", po::value<std::string>()->default_value("TRACK"), "channel to publish (default: TRACK)")
    ;
    
    try{
