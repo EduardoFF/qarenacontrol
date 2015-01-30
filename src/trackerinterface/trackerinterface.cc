@@ -36,7 +36,7 @@
 #define PI 3.14159265
 #define RADIANS(X) ((X)*PI/180)
 #define DEGREES(X) ((X)*180.0)/PI
-#define DEBUGMSG(m, ...) fprintf(stderr, m ,## __VA_ARGS__ )
+#define DEBUGMSG(m, ...) if( g_verbose) fprintf(stderr, m ,## __VA_ARGS__ )
 
 
 
@@ -44,8 +44,10 @@ uint32_t g_localAddress = 0;
 uint32_t g_serverAddress = 0;
 bool g_run = false;
 
+std::string g_channel;
 struct timeval g_totaTimeStart;
 
+bool g_verbose = true;
 uint32_t g_windowSize = 100;
 /// end of the current time window in milliseconds since the start of the process
 uint32_t g_nextFlush = g_windowSize;
@@ -85,6 +87,8 @@ readOpts( int argc, char* argv[] )
       ("help", "Display help message")
       ("local-addr,l", po::value<std::string>()->required(), "Local IPv4 address")
       ("server-addr,s", po::value<std::string>()->required(), "Server IPv4 address")
+      ("verbose,v",  boost::program_options::value<bool>()->default_value(true),
+       "lot of debug info")
       ("rate,r", po::value<int>()->default_value(100), "Retransmission rate in ms interval (default: 100ms = 10 Hz)")
       ("channel,c", po::value<std::string>()->default_value("TRACK"), "channel to publish (default: TRACK)")
    ;
@@ -103,10 +107,12 @@ readOpts( int argc, char* argv[] )
        exit(1);
      }
 
+     g_verbose = vm["verbose"].as<bool>();
      g_windowSize =  vm["rate"].as<int>();
      std::cout << "ws " << g_windowSize << std::endl;
      g_localAddress = inet_addr( vm["local-addr"].as<std::string>().c_str() );
      g_serverAddress = inet_addr( vm["server-addr"].as<std::string>().c_str() );
+     g_channel = vm["channel"].as<std::string>();
    }
    catch(boost::program_options::required_option& e) 
     { 
@@ -182,8 +188,7 @@ testQuaternion(double qx, double qy, double qz, double qw,
 void
 flushBucket()
 {
-  
-  DEBUGMSG("Flush\n");
+  //DEBUGMSG("Flush\n");
   poselcm::pose_list_t mymsg;
   mymsg.n = g_poseBucket.size();
   mymsg.poses.resize(mymsg.n);
@@ -214,8 +219,9 @@ flushBucket()
     /// because argos uses that convention
     /// quaternion is described in integer (multiplied by 1e4)
     /// note also that we shift y<->z
-    printf("ori %f %f %f %f\n",
-	   pose.qx, pose.qy, pose.qz, pose.qw);
+    if( g_verbose )
+      printf("ori %f %f %f %f\n",
+	     pose.qx, pose.qy, pose.qz, pose.qw);
     my_data.orientation[1] = CEIL(10000.0*pose.qx);
     my_data.orientation[3] = CEIL(10000.0*pose.qy);
     my_data.orientation[2] = CEIL(10000.0*pose.qz);
@@ -268,8 +274,8 @@ flushBucket()
     g_lastTimeSent[it->first] = mymsg.timestamp;
     g_lastPoseSent[it->first] = pose;
   }
-  g_lcm->publish("TRACK", &mymsg);
-  DEBUGMSG("Flush bucket\n");
+  g_lcm->publish(g_channel, &mymsg);
+  //DEBUGMSG("Flush bucket\n");
   g_poseBucket.clear();
 
 }
@@ -278,7 +284,6 @@ flushBucket()
 void 
 processFrames(FrameListener& frameListener)
 {
-  printf("process framesss\n");
    bool valid;
    MocapFrame frame;
    g_run = true;
@@ -298,7 +303,8 @@ processFrames(FrameListener& frameListener)
       
       if( timeElapsed() > g_nextFlush )
       {
-	printf("Flush time\n");
+	if( g_verbose)
+	  printf("Flush time\n");
 	flushBucket();
 	g_nextFlush += g_windowSize;
       }
